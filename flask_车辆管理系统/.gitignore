@@ -32,3 +32,11 @@ build/
 # Uploaded files (DO NOT COMMIT)
 /uploads/
 /logs/
+# 忽略 uploads 目录（用户上传文件）
+uploads/
+logs/
+*.log
+
+# 如果 uploads 在子目录下，比如 vehicle_management/uploads/
+vehicle_management/uploads/
+vehicle_management/logs/
