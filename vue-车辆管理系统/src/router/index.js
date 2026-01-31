@@ -23,6 +23,7 @@ import  Permission from '~/pages/permission/Permission.vue'
 import Role from "~/pages/role/Role.vue";
 import It from '~/pages/it/It.vue'
 import CarReceiptRecord from "~/pages/drivers/CarReceiptRecord.vue";
+import Test from "~/pages/test/Test.vue";
 
 
 
@@ -44,6 +45,7 @@ const routes = [
         {path: 'permissions', component: Permission, meta: { requiresAuth: true } },
         {path:'roles', component: Role, meta: { requiresAuth: true } },
         {path:'it', component: It, meta: { requiresAuth: true } },
+        {path:'test', component: Test, meta: { requiresAuth: true } },
     ]
   },
   { path: '/profile', component: Primary, meta: { requiresAuth: true } }, // 匹配 /profile → 渲染 Primary

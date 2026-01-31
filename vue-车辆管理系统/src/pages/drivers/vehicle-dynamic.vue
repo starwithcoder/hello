@@ -90,6 +90,7 @@
           <el-date-picker
             v-model="dynamicForm.start_date"
             type="date"
+             value-format="YYYY-MM-DD HH:mm:ss"
             placeholder="选择起始日期"
             style="width: 100%"
           />
@@ -97,6 +98,7 @@
         <el-form-item label="结束日期" prop="end_date">
           <el-date-picker
             v-model="dynamicForm.end_date"
+             value-format="YYYY-MM-DD HH:mm:ss"
             type="date"
             placeholder="选择结束日期"
             style="width: 100%"
@@ -191,7 +193,8 @@ const handleSearch = async () => {
         page_size: pagination.pageSize
       }
     })
-    dynamicList.value = response.data || []
+    console.log(response.data.data)
+    dynamicList.value = response.data.data || []
     pagination.total = response.length || 0
   } catch (error) {
     ElMessage.error('获取车辆动态列表失败，请稍后重试')

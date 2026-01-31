@@ -5,26 +5,28 @@
         <div class="card-header">
           <span class="header-title">事故记录管理</span>
           <el-button type="primary" @click="addRecord">
-            <el-icon><Plus /></el-icon>
+            <el-icon>
+              <Plus/>
+            </el-icon>
             新增事故记录
           </el-button>
         </div>
       </template>
-      
+
       <!-- 搜索和筛选区域 -->
       <el-form :inline="true" class="search-form" label-width="80px">
         <el-form-item label="司机姓名">
-          <el-input v-model="searchForm.driver_name" placeholder="请输入司机姓名" clearable />
+          <el-input v-model="searchForm.driver_name" placeholder="请输入司机姓名" clearable/>
         </el-form-item>
         <el-form-item label="车牌号">
-          <el-input v-model="searchForm.plate_number" placeholder="请输入车牌号" clearable />
+          <el-input v-model="searchForm.plate_number" placeholder="请输入车牌号" clearable/>
         </el-form-item>
         <el-form-item label="发生日期">
           <el-date-picker
-            v-model="searchForm.occurrence_date"
-            type="date"
-            placeholder="选择发生日期"
-            style="width: 180px"
+              v-model="searchForm.occurrence_date"
+              type="date"
+              placeholder="选择发生日期"
+              style="width: 180px"
           />
         </el-form-item>
         <el-form-item>
@@ -32,181 +34,117 @@
           <el-button @click="resetSearch">重置</el-button>
         </el-form-item>
       </el-form>
-      
+
       <!-- 事故记录列表 -->
       <el-table
-        :data="recordList"
-        stripe
-        border
-        style="width: 100%"
-        :row-key="row => row.id"
-        v-loading="loading"
+          :data="recordList"
+          stripe
+          border
+          style="width: 100%"
+          :row-key="row => row.id"
+          v-loading="loading"
       >
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="id" label="ID" width="80" align="center" />
-        <el-table-column prop="occurrence_date" label="发生日期" min-width="150" />
-        <el-table-column prop="driver_name" label="司机姓名" min-width="120" />
-        <el-table-column prop="plate_number" label="车牌号" min-width="120" />
+        <el-table-column type="selection" width="55"/>
+        <el-table-column prop="id" label="ID" width="80" align="center"/>
+        <el-table-column prop="occurrence_date" label="发生日期" min-width="150"/>
+        <el-table-column prop="driver_name" label="司机姓名" min-width="120"/>
+        <el-table-column prop="plate_number" label="车牌号" min-width="120"/>
         <el-table-column prop="liability_determination" label="责任认定" min-width="120">
           <template #default="scope">
-            <el-tag :type="scope.row.liability_determination === 'primary' ? 'danger' : scope.row.liability_determination === 'secondary' ? 'warning' : 'info'">
+            <el-tag
+                :type="scope.row.liability_determination === 'primary' ? 'danger' : scope.row.liability_determination === 'secondary' ? 'warning' : 'info'">
               {{ getResponsibilityText(scope.row.liability_determination) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="case_number" label="案件号" min-width="150" />
-        <el-table-column prop="remarks" label="备注" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="case_number" label="案件号" min-width="150"/>
+        <el-table-column prop="remarks" label="备注" min-width="200" show-overflow-tooltip/>
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="editRecord(scope.row)">
-              <el-icon><Edit /></el-icon>
+              <el-icon>
+                <Edit/>
+              </el-icon>
               编辑
             </el-button>
             <el-button type="danger" size="small" @click="deleteRecord(scope.row.id)">
-              <el-icon><Delete /></el-icon>
+              <el-icon>
+                <Delete/>
+              </el-icon>
               删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-container">
         <el-pagination
-          v-model:current-page="pagination.currentPage"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="pagination.total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+            v-model:current-page="pagination.currentPage"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
-    
+
     <!-- 新增/编辑事故记录对话框 -->
     <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑事故记录' : '新增事故记录'"
-      width="600px"
+        v-model="dialogVisible"
+        :title="isEdit ? '编辑事故记录' : '新增事故记录'"
+        width="600px"
+         @close="handleClose"
+>
+
     >
       <el-form :model="recordForm" :rules="recordRules" ref="recordFormRef" label-width="100px">
         <el-form-item label="发生日期" prop="occurrence_date">
           <el-date-picker
-            v-model="recordForm.occurrence_date"
-            type="date"
-            placeholder="选择发生日期"
-            style="width: 100%"
+              v-model="recordForm.occurrence_date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              type="date"
+              placeholder="选择发生日期"
+              style="width: 100%"
           />
         </el-form-item>
         <el-form-item label="司机姓名" prop="driver_name">
-          <el-input v-model="recordForm.driver_name" placeholder="请输入司机姓名" />
+          <el-input v-model="recordForm.driver_name" placeholder="请输入司机姓名"/>
         </el-form-item>
         <el-form-item label="车牌号" prop="plate_number">
-          <el-input v-model="recordForm.plate_number" placeholder="请输入车牌号" />
+          <el-input v-model="recordForm.plate_number" placeholder="请输入车牌号"/>
         </el-form-item>
         <el-form-item label="责任认定" prop="liability_determination">
           <el-select v-model="recordForm.liability_determination" placeholder="请选择责任认定">
-            <el-option label="全责" value="primary" />
-            <el-option label="主责" value="secondary" />
-            <el-option label="同等责任" value="equal" />
-            <el-option label="次责" value="minor" />
-            <el-option label="无责" value="none" />
+             <el-option
+      v-for="item in liabilityOptions"
+      :key="item.value"
+      :label="item.label"
+      :value="item.value"
+    />
           </el-select>
         </el-form-item>
-        <el-form-item label="事故图 1" prop="accident_image_1">
+        <el-form-item label="事故图" prop="accident_image_1">
           <el-upload
-            v-model:file-list="recordForm.accident_image_1"
-            action="#"
-            list-type="picture-card"
-            :auto-upload="false"
+              v-model:file-list="accident_images"
+              action="#"
+              list-type="picture-card"
+              :auto-upload="false"
+              limit="4"
           >
-            <el-icon><Plus /></el-icon>
-            <template #file="{ file }">
-              <img :src="file.url" alt="事故图 1" />
-              <span class="el-upload-list__item-actions">
-                <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                  <el-icon><ZoomIn /></el-icon>
-                </span>
-                <span class="el-upload-list__item-delete" @click="handleRemove(file, 1)">
-                  <el-icon><Delete /></el-icon>
-                </span>
-              </span>
-            </template>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="事故图 2" prop="accident_image_2">
-          <el-upload
-            v-model:file-list="recordForm.accident_image_2"
-            action="#"
-            list-type="picture-card"
-            :auto-upload="false"
-          >
-            <el-icon><Plus /></el-icon>
-            <template #file="{ file }">
-              <img :src="file.url" alt="事故图 2" />
-              <span class="el-upload-list__item-actions">
-                <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                  <el-icon><ZoomIn /></el-icon>
-                </span>
-                <span class="el-upload-list__item-delete" @click="handleRemove(file, 2)">
-                  <el-icon><Delete /></el-icon>
-                </span>
-              </span>
-            </template>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="事故图 3" prop="accident_image_3">
-          <el-upload
-            v-model:file-list="recordForm.accident_image_3"
-            action="#"
-            list-type="picture-card"
-            :auto-upload="false"
-          >
-            <el-icon><Plus /></el-icon>
-            <template #file="{ file }">
-              <img :src="file.url" alt="事故图 3" />
-              <span class="el-upload-list__item-actions">
-                <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                  <el-icon><ZoomIn /></el-icon>
-                </span>
-                <span class="el-upload-list__item-delete" @click="handleRemove(file, 3)">
-                  <el-icon><Delete /></el-icon>
-                </span>
-              </span>
-            </template>
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="事故图 4" prop="accident_image_4">
-          <el-upload
-            v-model:file-list="recordForm.accident_image_4"
-            action="#"
-            list-type="picture-card"
-            :auto-upload="false"
-          >
-            <el-icon><Plus /></el-icon>
-            <template #file="{ file }">
-              <img :src="file.url" alt="事故图 4" />
-              <span class="el-upload-list__item-actions">
-                <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
-                  <el-icon><ZoomIn /></el-icon>
-                </span>
-                <span class="el-upload-list__item-delete" @click="handleRemove(file, 4)">
-                  <el-icon><Delete /></el-icon>
-                </span>
-              </span>
-            </template>
           </el-upload>
         </el-form-item>
         <el-form-item label="案件号" prop="case_number">
-          <el-input v-model="recordForm.case_number" placeholder="请输入案件号" />
+          <el-input v-model="recordForm.case_number" placeholder="请输入案件号"/>
         </el-form-item>
         <el-form-item label="备注" prop="remarks">
           <el-input
-            v-model="recordForm.remarks"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入备注"
+              v-model="recordForm.remarks"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入备注"
           />
         </el-form-item>
       </el-form>
@@ -217,17 +155,27 @@
         </div>
       </template>
     </el-dialog>
-    
+
     <!-- 图片预览对话框 -->
-   
+
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { Plus, Edit, Delete, ZoomIn } from '@element-plus/icons-vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import {ref, reactive, onMounted} from 'vue'
+import {Plus, Edit, Delete, ZoomIn} from '@element-plus/icons-vue'
+import {ElMessageBox, ElMessage} from 'element-plus'
 import axios from 'axios'
+
+
+
+const liabilityOptions = [
+  { label: '全责', value: 'primary' },
+  { label: '主责', value: 'secondary' },
+  { label: '同等责任', value: 'equal' },
+  { label: '次责', value: 'minor' },
+  { label: '无责', value: 'none' }
+]
 
 // 搜索表单
 const searchForm = reactive({
@@ -262,30 +210,28 @@ const recordForm = reactive({
   driver_name: '',
   plate_number: '',
   liability_determination: '',
-  accident_image_1: [],
-  accident_image_2: [],
-  accident_image_3: [],
-  accident_image_4: [],
   case_number: '',
   remarks: ''
 })
+//事故图片
+const accident_images = ref([])
 
 // 表单验证规则
 const recordRules = {
   occurrence_date: [
-    { required: true, message: '请选择发生日期', trigger: 'change' }
+    {required: false, message: '请选择发生日期', trigger: 'change'}
   ],
   driver_name: [
-    { required: true, message: '请输入司机姓名', trigger: 'blur' }
+    {required: false, message: '请输入司机姓名', trigger: 'blur'}
   ],
   plate_number: [
-    { required: true, message: '请输入车牌号', trigger: 'blur' }
+    {required: false, message: '请输入车牌号', trigger: 'blur'}
   ],
   liability_determination: [
-    { required: true, message: '请选择责任认定', trigger: 'change' }
+    {required: false, message: '请选择责任认定', trigger: 'change'}
   ],
   case_number: [
-    { required: true, message: '请输入案件号', trigger: 'blur' }
+    {required: false, message: '请输入案件号', trigger: 'blur'}
   ]
 }
 
@@ -320,7 +266,7 @@ const handleSearch = async () => {
   loading.value = true
   try {
     const response = await axios.get('/accident_record/', {
-      params: { ...searchForm, page: pagination.currentPage, page_size: pagination.pageSize }
+      params: {...searchForm, page: pagination.currentPage, page_size: pagination.pageSize}
     })
     recordList.value = response.data
     pagination.total = response.length
@@ -345,26 +291,26 @@ const resetSearch = () => {
 // 新增事故记录
 const addRecord = () => {
   isEdit.value = false
+  dialogVisible.value = true
+}
+//关闭清空数据
+const handleClose =()=>{
   Object.assign(recordForm, {
     id: '',
     occurrence_date: '',
     driver_name: '',
     plate_number: '',
     liability_determination: '',
-    accident_image_1: [],
-    accident_image_2: [],
-    accident_image_3: [],
-    accident_image_4: [],
     case_number: '',
     remarks: ''
   })
-  dialogVisible.value = true
-}
+  accident_images.value = []
 
+}
 // 编辑事故记录
 const editRecord = (row) => {
   isEdit.value = true
-  Object.assign(recordForm, { ...row })
+  Object.assign(recordForm, {...row})
   dialogVisible.value = true
 }
 
@@ -376,7 +322,7 @@ const deleteRecord = async (id) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     loading.value = true
     await axios.delete(`/accident_record/${id}`)
     ElMessage.success('删除成功')
@@ -403,7 +349,20 @@ const saveRecord = () => {
           ElMessage.success('编辑成功')
         } else {
           // 新增事故记录
-          await axios.post('/accident_record/', recordForm)
+          const formData = new FormData()
+
+          accident_images.value.forEach((file,index) => {
+              if(file.raw instanceof File )
+                formData.append(`accident_images_${index+1}`, file.raw ??'' )
+            })
+          for (const [key,value] of Object.entries(recordForm)) {
+            formData.append(key,value ?? '')
+            console.log(key,value)
+          }
+
+          //console.log(formData.values())
+
+          await axios.post('/accident_record/', formData)
           ElMessage.success('新增成功')
         }
         dialogVisible.value = false
