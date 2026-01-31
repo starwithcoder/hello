@@ -4,40 +4,87 @@ from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
 from vehicle_management import db
-from vehicle_management.models import AccidentRecord
+from vehicle_management.models import AccidentRecord, Drivers,Cars
 import random
-
+from sqlalchemy.orm import joinedload
 
 
 # 允许的图片扩展名
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+#获取基础路径
+def get_baseurl():
+    return current_app.root_path
+#保存文件
+def save_file(file_fields,driver_name):
+    path = []
+    base_dir = get_baseurl()
+    upload_folder = os.path.join(base_dir, f'uploads/{driver_name}')
+    os.makedirs(upload_folder, exist_ok=True)
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+    for field in file_fields:
+        if field:
+            filename = secure_filename(field.filename)
+            filepath = os.path.join(upload_folder, filename)
+            field.save(filepath)
+            path.append(filepath)
+    return path
 
 # 新增事故记录
 @accident_record_bp.route('', methods=['POST'])
-def create_accident():
+async def create_accident():
     print('===============accident_record.create_accident========================')
-    data = request.get_json()
-    print(data)
-    print('==========================================================')
-    #const { id, occurrence_date, driver_name, plate_number, liability_determination, case_number, remarks } = data
-    new_accident_record = AccidentRecord(
 
-        id=random.randint(1, 1000000),
-        occurrence_date=data['occurrence_date'].replace('T', ' ').replace('Z', '').split('.')[0],
-        driver_name=data['driver_name'],
-        plate_number=data['plate_number'],
-        liability_determination=data['liability_determination'],
-        case_number=data['case_number'],
-        remarks=data['remarks']
-    )
-    db.session.add(new_accident_record)
-    db.session.commit()
-    return jsonify({'message': '新增成功', 'id': new_accident_record.id}), 201
+    occurrence_date = request.form.get("occurrence_date")
+    driver_name = request.form.get("driver_name")
+    plate_number = request.form.get("plate_number")
+    liability_determination = request.form.get("liability_determination")
+    #案件号
+    case_number = request.form.get("case_number")
+    remarks = request.form.get("remark")
+
+    file_fields = [
+        request.files.get('accident_images_1'),
+        request.files.get('accident_images_2'),
+        request.files.get('accident_images_3'),
+        request.files.get('accident_images_4')
+    ]
+
+    driver = Drivers.query.options(joinedload(Drivers.cars)).filter_by(driver_name=driver_name).first()
+
+    if driver:
+        car = next((c for c in driver.cars if c.plate_number == plate_number), None)
+        if car:
+            paths = save_file(file_fields,driver_name)
+
+            new_accident_record = AccidentRecord(
+               occurrence_date = occurrence_date,
+               driver_name = driver_name,
+               plate_number = plate_number,
+               liability_determination = liability_determination,
+               accident_image_1 = next(iter(paths[0:1]), None),
+               accident_image_2 = next(iter(paths[1:2]), None),
+               accident_image_3 = next(iter(paths[2:3]), None),
+               accident_image_4 = next(iter(paths[3:]), None),
+               case_number = case_number,
+               remarks = remarks
+               )
+            try:
+                db.session.add(new_accident_record)
+                db.session.commit()
+            except Exception as e:
+                print(str(e))
+                return jsonify({'message': str(e)}), 500
+            return jsonify({'msg':'success'})
+        else:
+            return jsonify({'msg':'车辆错误'})
+    else:
+        return jsonify({'msg':'司机错误'})
+
+
+
+    return jsonify({'message': '新增成功'}), 201
     
 
    

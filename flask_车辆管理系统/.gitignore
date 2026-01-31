@@ -28,3 +28,7 @@ instance/
 dist/
 build/
 *.egg-info/
+
+# Uploaded files (DO NOT COMMIT)
+/uploads/
+/logs/

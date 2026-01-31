@@ -4,7 +4,7 @@ from vehicle_management import db
 
 from datetime import datetime
 from flask import request
-from vehicle_management.models import VehicleDynamic
+from vehicle_management.models import VehicleDynamic,Cars
 from vehicle_management.utils.decorators import require_permission
 
 # 增加
@@ -12,25 +12,44 @@ from vehicle_management.utils.decorators import require_permission
 def add_vehicle_dynamic():
     print('======add vehicle dynamic======')
     data  = request.get_json()
-    new_vehicle_dynamic = VehicleDynamic(
-    plate_number = data['plate_number'],
-    fault_phenomenon = data['fault_phenomenon'],
-    start_date = data['start_date'].replace('T', ' ').replace('Z', '').split('.')[0],
-    end_date = data['end_date'].replace('T', ' ').replace('Z', '').split('.')[0],
-    related_personnel = data['related_personnel'],
+
+    plate_number = data.get('plate_number')
+    fault_phenomenon = data.get('fault_phenomenon')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    related_personnel = data.get('related_personnel')
     remarks = data.get('remarks', None)
-    )
-    db.session.add(new_vehicle_dynamic)
-    db.session.commit()
-    return jsonify({'message': 'Vehicle dynamic added successfully'}), 201
+
+    car = Cars.query.filter_by(plate_number=plate_number).first()
+    if car:
+        new_vehicle_dynamic = VehicleDynamic(
+        plate_number = plate_number,
+        fault_phenomenon = fault_phenomenon,
+        start_date = start_date,
+        end_date = end_date,
+        related_personnel = related_personnel,
+        remarks = remarks
+        )
+        try:
+            db.session.add(new_vehicle_dynamic)
+            db.session.commit()
+        except Exception as e:
+            return jsonify({'message': 'Vehicle dynamic add failed', 'error': str(e)}), 500
+        return jsonify({'message': 'Vehicle dynamic added successfully'}), 201
+    else:
+        return jsonify({'message': 'Vehicle dynamic not found'}), 404
 
 # 查询
 @vehicle_dynamic_bp.route('', methods=['GET'])
 def get_vehicle_dynamics():
     print('======get vehicle dynamics======')
+    data = []
+    vehicle_dynamics = VehicleDynamic.query.order_by(VehicleDynamic.id).limit(10).all()
+    for vehicle_dynamic in vehicle_dynamics:
+        vehicle_dynamic_dict = vehicle_dynamic.to_dict()
+        data.append(vehicle_dynamic_dict)
 
-    vehicle_dynamics = VehicleDynamic.query.all()
-    return jsonify([vehicle_dynamic.to_dict() for vehicle_dynamic in vehicle_dynamics])
+    return jsonify({'message': 'Vehicle dynamics retrieved successfully', 'data': data}), 200
 # 更新
 @vehicle_dynamic_bp.route('/<int:id>', methods=['PUT'])
 def update_vehicle_dynamic(id):
