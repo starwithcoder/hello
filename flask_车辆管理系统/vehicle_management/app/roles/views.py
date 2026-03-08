@@ -9,7 +9,7 @@ from vehicle_management.models import Permission,Role
 from sqlalchemy.orm import selectinload
 """查询所有角色"""
 
-@roles.route('get')
+@roles.route('get',methods=['GET'])
 def get_roles():
 
     data =[]
@@ -29,27 +29,25 @@ def get_roles():
 
 
 """增加角色"""
-@roles.route('post')
+@roles.route('post',methods=['POST'])
 def post_role():
     data = request.get_json()
-
+    print('===========create')
     role_name = data.get('role_name')
     permission_ids = data.get('permission_ids',[])
-    description = data.get('description')
+    description = data.get('role_description')
 
 
     existing_role = Role.query.filter_by(name=role_name).first()
     if existing_role:
         return jsonify({'data':'','code':40003,'msg':'role is existed'})
 
-
-
     new_role = Role(name=role_name,description=description)
     db.session.add(new_role)
-
-    permissions = Permission.query.filter(Permission.id.in_(permission_ids)).all()
-
-    new_role.permissions.extend(permissions)
+    if permission_ids:
+        permissions = Permission.query.filter(Permission.id.in_(permission_ids)).all()
+        if permissions:
+            new_role.permissions.extend(permissions)
 
     try:
         db.session.commit()
@@ -61,19 +59,23 @@ def post_role():
 """修改角色"""
 @roles.route('put',methods=['PUT'])
 def put_role():
+    print("=========update")
     data = request.get_json()
     role_name = data.get('role_name')
+    role_description = data.get('role_description')
+
     if not role_name:
-        return jsonify({'data':'','code':40003,'msg':'role is existed'})
+        return jsonify({'data':'','code':40003,'msg':'操作失败'})
 
     role = Role.query.filter_by(name=role_name).first()
     if not role:
-        return jsonify({'data':'','code':40003,'msg':'role is existed'})
+        return jsonify({'data':'','code':40003,'msg':'操作失败'})
 
     permission_ids = data.get('permission_ids', [])
     permissions = Permission.query.filter(Permission.id.in_(permission_ids)).all()
 
     try:
+        role.description = role_description
         role.permissions = permissions
         db.session.commit()
         return jsonify({'data':'','code':20002,'msg':'role updated successfully'})
@@ -85,8 +87,9 @@ def put_role():
 """删除角色"""
 @roles.route('delete',methods=['DELETE'])
 def delete_role():
-    data = request.get_json()
-    role_name = data.get('role_name')
+    role_name = request.args.get('role_name')
+    print( role_name)
+
     if not role_name:
         return jsonify({'data': '','code':40003,'msg': '参数值非法' })
 

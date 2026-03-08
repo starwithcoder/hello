@@ -15,8 +15,12 @@ export default {
     update(data){
         return axios.put(`/permissions/update`, data)
     },
-    delete(data){
-        return axios.delete(`/permissions/delete`,data)
+    delete(permission_id){
+        return axios.delete(`/permissions/delete?permission_id=${permission_id}`)
+    },
+
+    search(keyword){
+        return axios.get(`/permissions/search?keyword=${keyword}`)
     }
 
 

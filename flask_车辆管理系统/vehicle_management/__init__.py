@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,jsonify
 from vehicle_management.utils.middlewares import register_auth_middleware
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -25,7 +25,13 @@ def create_app(config_name='default'):
 
     # 加载配置
     app.config.from_object(config[config_name])
-
+    @app.route('/')
+    def index():
+        return jsonify({
+            'message': '欢迎访问车辆管理系统 API',
+            'version': '1.0',
+            'status': 'running'
+        })
     CORS(
         app,
         resources={r"/api/*": {"origins": "http://localhost:5173"}},  # 仅 /api/* 路径 + 仅允许 Vue 源

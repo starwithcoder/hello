@@ -5,6 +5,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DEBUG = False
     TESTING = False
+    JSON_AS_ASCII = False
 
 class DevelopmentConfig(Config):
     """开发环境配置"""

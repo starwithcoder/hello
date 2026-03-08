@@ -10,17 +10,15 @@ def get_permissions():
 
     result  = []
     permissions_list = Permission.query.all()
-    print(type(permissions_list))
-    if permissions_list:
-        for permission in permissions_list:
+    for permission in permissions_list:
             result.append({
                 'id': permission.id,
                 'name': permission.name,
                 'description': permission.description
             })
 
-        return jsonify({'data':result,'msg':'success','code':'200'})
-    return jsonify({'data':result,'msg':'success','code':'200'})
+    return jsonify({'data':result,'msg':'查询成功' ,'code':2000})
+
 """查单个权限"""
 @permissions.route('get/<int:id>')
 def get_permission(id):
@@ -33,21 +31,37 @@ def get_permission(id):
     result ={'permission_name':permission.name}
     return jsonify(result, {'msg': 'success'})
 
+"""search"""
+@permissions.route('search',methods=['GET'])
+def search_permissions():
+    result = []
+    keyword = request.args.get('keyword').strip()
+    if keyword.isdigit():
+        permissions_list = Permission.query.filter_by(id=keyword).all()
+    else:
+        permissions_list = Permission.query.filter(Permission.name.like(f'%{keyword}%')).all()
+
+    for permission in permissions_list:
+        result.append({
+            'id': permission.id,
+            'name': permission.name,
+            'description': permission.description
+        })
+    return jsonify({'data':result,'msg':'success' ,'code':2000})
+
 """增加权限"""
 @permissions.route('post',methods=['POST'])
 def post_permissions():
     result = {}
     data = request.get_json()
-    permission_name = data.get('permission_name')
+    name = data.get('name')
     description = data.get('description')
 
-
-
-    result ={'permission_name':permission_name}
+    result ={'permission_name':name}
     if description:
-        new_permission = Permission(name=permission_name,description=description)
+        new_permission = Permission(name=name,description=description)
     else:
-        new_permission = Permission(name=permission_name)
+        new_permission = Permission(name=name)
     try:
 
         db.session.add(new_permission)
@@ -59,14 +73,13 @@ def post_permissions():
 
 """修改权限"""
 @permissions.route('update',methods=['PUT'])
-
 def update_permission():
 
     result = {}
     data = request.get_json()
 
-    permission_id = data.get('permission_id')
-    permission_name = data.get('permission_name')
+    permission_id = data.get('id')
+    permission_name = data.get('name')
     description = data.get('description')
 
     print(description)
@@ -89,18 +102,19 @@ def update_permission():
 """删除权限"""
 @permissions.route('delete',methods=['DELETE'])
 def delete_permission():
+
     result = {}
-    data = request.get_json()
-    permission_id = data.get('permission_id')
+    permission_id = request.args.get('permission_id',type= int)
+    print(permission_id)
 
     permission = Permission.query.filter_by(id=permission_id).first()
 
     if not permission:
-        return jsonify(result,{'msg':'no exsited,success','code':'201'})
+        return jsonify({'data':result,'msg':'no exsited,success','code':'201'})
 
     try:
         db.session.delete(permission)
         db.session.commit()
-        return jsonify(result,{'msg':'success'})
+        return jsonify({'data':result,'msg':'success'})
     except Exception as e:
-        return jsonify(result,{'msg':str(e)})
+        return jsonify({'data':result,'msg':str(e)})

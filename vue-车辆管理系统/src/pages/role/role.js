@@ -13,10 +13,10 @@ export default {
         return axios.post(`/roles/post`, data)
     },
     update(data) {
-        return axios.put(`/roles/update`, data)
+        return axios.put(`/roles/put`, data)
     },
-    delete(data) {
-        return axios.delete(`/roles/delete`, data)
+    delete(name) {
+        return axios.delete(`/roles/delete?role_name=${name}`)
     }
 }
 
