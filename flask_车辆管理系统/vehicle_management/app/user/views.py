@@ -44,7 +44,7 @@ def login():
     password = data.get('password')
     logger.debug(username)
     # 如果纯在token
-
+    print('有token')
     return authenticate_user(username,password)
     #如果不存在
     # else:
@@ -81,3 +81,12 @@ def register():
     return jsonify({'status': 201, 'msg': '注册成功', 'user_id': new_user.id}), 201
 
 
+@user_bp.route('login_token', methods=['GET'])
+def login_token():
+    try:
+        if  g.current_user is not None:
+            print(g.current_user)
+    except Exception as e:
+        print(e)
+        return jsonify({'status': 401, 'msg': '未认证'})
+    return jsonify({'status': 200, 'msg': 'success'})

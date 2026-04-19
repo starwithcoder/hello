@@ -22,8 +22,10 @@
     <el-table :data="roles" border style="width: 100%" v-else>
       <el-table-column prop="role_name" label="角色名称" />
       <el-table-column prop="role_description" label="描述" />
-      <el-table-column label="权限">
-         <el-button type="default" @click="getPermissions()">权限</el-button>
+      <el-table-column  label="权限">
+        <template #default="{ row }">
+        <el-button type="default" @click="getPermissions(row)">权限</el-button>
+        </template>
       </el-table-column>
 
         <el-table-column label="操作" width="180">
@@ -57,31 +59,29 @@
       </template>
     </el-dialog>
 
-     <el-dialog
-      v-model="permissionDialogVisible"
-      :title="`角色权限 - ${currentRoleName}`"
-      width="600px"
-    >
-      <el-transfer
-        v-model="selectedPermissions"
-        :data="allPermissions"
-        :titles="['所有权限', '已选权限']"
-        :button-texts="['移除', '添加']"
-         :format="{
-          noChecked: '${total}',
-          hasChecked: '${checked}/${total}'
-        }"
-        filterable
-        filter-placeholder="搜索权限"
-      />
+   <el-dialog v-model="permissionDialogVisible" title="分配权限">
+    <!-- 穿梭框组件 -->
+    <el-transfer
+      v-model="selectedPermissions"
+      :data="allPermissions"
+      :titles="['所有权限', '已选权限']"
+      :button-texts="['移除', '添加']"
+      :format="{
+        noChecked: '${total}',
+        hasChecked: '${checked}/${total}'
+      }"
+      filterable
+      filter-placeholder="搜索权限"
+    />
 
-      <template #footer>
-        <el-button @click="permissionDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveRolePermissions" :loading="savingPermission">
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
+    <!-- 对话框底部按钮 -->
+    <template #footer>
+      <el-button @click="permissionDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="saveRolePermissions" :loading="savingPermission">
+        保存
+      </el-button>
+    </template>
+  </el-dialog>
 
 
 
@@ -94,26 +94,45 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import role from "~/pages/role/role.js";
 
+
 // 数据
 const roles = ref([])
+
 const formRef= ref(null)
+//角色映射
 const form = ref({
   id: null,
   role_name: '',
-  role_description: ''
+  role_description: '',
+  permission_ids: []
 })
+
 const dialogTitle = ref()
+
+const selectedPermissions = ref([
+
+])
+
+const allPermissions = ref([
+  { key: 1, label: '查看用户', disabled: false },
+  { key: 2, label: '添加用户', disabled: false },
+  { key: 3, label: '删除用户', disabled: false },
+  { key: 4, label: '查看角色', disabled: false },
+  { key: 5, label: '分配角色', disabled: false },
+])
 
 //状态
 const loading = ref(false)
 const dialogVisible = ref(false)
 const isEditMode = ref(false)
 const submitting = ref(false)
-
+const permissionDialogVisible = ref(false)
+const savingPermission = ref(false)
 
 // 获取角色列表
 const getroles = async () => {
   loading.value = true
+
   try {
     // 请求后端接口（替换为你的地址）
     const res = await role.getAll()
@@ -127,25 +146,7 @@ const getroles = async () => {
     loading.value = false
   }
 }
-
-// 获取权限列表
-const getpermissions = async () => {
-  loading.value = true
-  try {
-    // 获取权限列表
-    const res = await role.getPermissions()
-
-    // 后端返回格式：{ "data": [ { "id": 1, "name": "admin", "description": "管理员权限" }, ... ] }
-    permissions.value = res.data.data  // ✅ 直接取 data 字段
-
-  } catch (error) {
-    alert('获取权限失败：' + error.message)
-  } finally {
-    loading.value = false
-  }
-}
-
-//编辑权限
+//编辑角色
 const openDialog = (type, row) => {
   dialogVisible.value = true
   if (type === 'add'){
@@ -165,6 +166,7 @@ const openDialog = (type, row) => {
     }
   }
 }
+//增加更新角色
 const handleSubmit =async () => {
   let res
   formRef.value.validate(async (valid) => {
@@ -184,8 +186,7 @@ const handleSubmit =async () => {
     }
   })
 }
-
-// 删除权限
+// 删除角色
 const handleDelete = async (row) => {
   console.log(row.role_name)
   await role.delete(row.role_name).then(() => {
@@ -195,11 +196,62 @@ const handleDelete = async (row) => {
   })
 
 }
-
 // 页面加载时自动获取数据
 onMounted(() => {
   getroles()
 })
+
+
+
+
+// 获取权限列表
+const getPermissions = async (row) => {
+  loading.value = true
+  permissionDialogVisible.value = true
+
+  let current_permissions = row.role_permissions
+  let res
+  selectedPermissions.value = current_permissions.map(permission => permission.permission_id)
+  form.value.role_name = row.role_name
+  try {
+      console.log(current_permissions)
+      res = await role.getAllP()
+      allPermissions.value = res.data.data.map(permission => ({
+        key: permission.id,
+        label: permission.name
+      }))
+  } catch (error) {
+    alert('获取权限失败：' + error.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 分配权限
+
+
+// 保存权限
+const saveRolePermissions = () => {
+  let res
+  savingPermission.value = true
+
+  // 这里可以调用后端接口，将 selectedPermissions.value 发送给服务器
+  form.value.permission_ids = selectedPermissions.value
+  try {
+    console.log(form.value)
+    res = role.update(form.value)
+  }
+  catch( error){
+         alert('保存权限失败：' + error.message)
+  }
+  //关闭页面
+  savingPermission.value = false
+  permissionDialogVisible.value = false
+
+}
+
+
+
 
 </script>
 

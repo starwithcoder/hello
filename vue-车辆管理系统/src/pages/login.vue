@@ -37,10 +37,11 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive,onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import {a} from "vue-router/dist/devtools-EWN81iOl.mjs";
 
 const router = useRouter()
 const loginFormRef = ref()
@@ -116,6 +117,26 @@ const handleLogin = async () => {
 const handleRegister = () => {
   router.push('/register')
 }
+onMounted( async ()=>{
+  let response
+  try{
+    console.log('自动登录')
+    response = await axios.get('/login_token')
+    console.log(response)
+     router.push('/drivers')
+  }
+  catch ( error)
+  {
+
+  }
+  finally {
+
+  }
+
+})
+
+
+
 </script>
 
 <style scoped>

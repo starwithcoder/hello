@@ -11,23 +11,23 @@
           @open="handleOpen"
           @close="handleClose"
       >
-        <!-- 司机信息管理 -->
-        <el-menu-item index="drivers">
+        <!-- 司机信息管理*************************************** -->
+        <el-menu-item index="drivers" v-if="isdrivers">
           <el-icon>
             <User/>
           </el-icon>
           <span>司机信息管理</span>
         </el-menu-item>
 
-        <!-- 汽车在库档案管理 -->
-        <el-menu-item index="cars">
+        <!-- 汽车在库档案管理********************************** -->
+        <el-menu-item index="cars" v-if="iscars">
           <el-icon>
             <Box/>
           </el-icon>
           <span>汽车在库档案管理</span>
         </el-menu-item>
-
-        <el-sub-menu index="records">
+        <!-- 记录************************************** -->
+        <el-sub-menu index="records" v-if="isrecords">
           <!-- 这里使用了具名插槽来定义菜单标题 -->
           <template #title>
             <el-icon>
@@ -61,8 +61,8 @@
           </el-menu-item>
         </el-sub-menu>
 
-        <!-- 事故 (下拉菜单) -->
-        <el-sub-menu index="accident">
+        <!-- 事故 (下拉菜单) ***************************************-->
+        <el-sub-menu index="accident" v-if="isaccident">
           <template #title>
             <el-icon>
               <WarningFilled/>
@@ -86,6 +86,8 @@
             <span>车辆动态管理</span>
           </el-menu-item>
         </el-sub-menu>
+
+        <!-- 其他********************************************** -->
         <el-menu-item index="it" v-if="isit">
           <el-icon>
             <Setting/>
@@ -114,6 +116,11 @@ import {
 import {onMounted, reactive, ref} from "vue";
 
 const isit = ref(false);
+const isaccident = ref(false);
+const iscars = ref(false);
+const isdrivers = ref(false);
+const isrecords = ref(false);
+
 import {jwtDecode} from 'jwt-decode';
 
 const token = localStorage.getItem('token')
@@ -131,11 +138,34 @@ const handleClose = (key: string | number, keyPath: (string | number)[]) => {
   console.log(key, keyPath)
 }
 
-
+//这里通过权限判断来控制是否显示IT菜单
+//默认设置五个权限分别是司机，汽车，记录，事故，其他，默认对应0，1，2，3，4
+//
 onMounted(() => {
-  const permissions = payload.permissions
-  if (permissions.includes(5)) {
+  //由于开发与数据库原因以下代码注释，请自行修改，判断权限目前写死
+  //const permissions = payload.permissions
+  const permissions = [0, 1, 2, 3, 4]
+  console.log("解析到的权限是"+permissions)
+
+  if (permissions.includes(4)){
+    //其他
     isit.value = true
+  }
+  if (permissions.includes(3)) {
+    //事故
+    isaccident.value = true
+  }
+  if (permissions.includes(2)) {
+    //记录
+    isrecords.value = true
+  }
+  if (permissions.includes(1)) {
+    // 汽车
+    iscars.value = true
+  }
+  if (permissions.includes(0)) {
+    //司机
+    isdrivers.value = true
   }
 })
 </script>

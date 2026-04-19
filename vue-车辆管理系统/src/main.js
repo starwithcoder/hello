@@ -11,7 +11,7 @@ import router from './router'
 const app = createApp(App)
 
 // 配置axios
-axios.defaults.baseURL = 'http://192.168.1.2:5000/api' // 设置基础URL
+axios.defaults.baseURL = '/api' // 设置基础URL
 
 // 请求拦截器
 axios.interceptors.request.use(

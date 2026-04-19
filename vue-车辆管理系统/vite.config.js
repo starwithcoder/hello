@@ -21,5 +21,14 @@ export default defineConfig({
     vueDevTools(),
     WindiCSS(),
   ],
+  base: './',
+ server: {
+  proxy: {
+    '/api': {
+      target: 'http://192.168.1.2:5000', // 后端地址
+      changeOrigin: true
+    }
+  }
+}
 
 })

@@ -32,11 +32,11 @@ def create_app(config_name='default'):
             'version': '1.0',
             'status': 'running'
         })
-    CORS(
-        app,
-        resources={r"/api/*": {"origins": "http://localhost:5173"}},  # 仅 /api/* 路径 + 仅允许 Vue 源
-        supports_credentials=True  # 如果需要携带 Cookie（如 session）
-    )
+    # CORS(
+    #     app,
+    #     resources={r"/api/*": {"origins": ["http://localhost:5173", "http://192.168.1.2:5000"]}},  # 仅 /api/* 路径 + 仅允许 Vue 源
+    #     supports_credentials=True  # 如果需要携带 Cookie（如 session）
+    # )
 
 
 
@@ -67,7 +67,7 @@ def create_app(config_name='default'):
     migrate.init_app(app, db)
 
     # 注册中间件
-    # register_auth_middleware(app)
+    register_auth_middleware(app)
 
     # 注册模型
     from .models import load

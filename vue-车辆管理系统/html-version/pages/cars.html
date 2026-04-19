@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汽车在库档案管理</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body {
+      background-color: #f5f7fa;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .page-header { margin-bottom: 30px; }
+    .page-title { font-size: 28px; font-weight: bold; margin: 0 0 8px 0; color: #303133; }
+    .page-subtitle { font-size: 14px; color: #909399; margin: 0; }
+    .card { background-color: #fff; border-radius: 4px; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+    .card-header { padding: 15px 20px; border-bottom: 1px solid #ebeef5; display: flex; justify-content: space-between; align-items: center; }
+    .card-header span { font-size: 18px; font-weight: 600; color: #303133; }
+    .card-body { padding: 20px; }
+    .search-form { display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; background-color: #f0f2f5; border-radius: 4px; margin-bottom: 20px; }
+    .search-item { display: flex; align-items: center; gap: 10px; }
+    .search-item label { white-space: nowrap; color: #606266; font-weight: 500; }
+    .search-item input, .search-item select { padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; min-width: 150px; }
+    .search-item input:focus, .search-item select:focus { outline: none; border-color: #409eff; }
+    .search-actions { display: flex; gap: 10px; margin-left: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ebeef5; }
+    table th { background-color: #f5f7fa; font-weight: 600; color: #606266; }
+    table tbody tr:hover { background-color: #f5f7fa; }
+    .btn { padding: 8px 16px; border-radius: 4px; border: 1px solid #dcdfe6; background-color: #fff; color: #606266; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+    .btn:hover { border-color: #409eff; color: #409eff; }
+    .btn-primary { background-color: #409eff; border-color: #409eff; color: #fff; }
+    .btn-primary:hover { background-color: #66b1ff; border-color: #66b1ff; }
+    .btn-danger { background-color: #f56c6c; border-color: #f56c6c; color: #fff; }
+    .btn-danger:hover { background-color: #f78989; border-color: #f78989; }
+    .btn-small { padding: 5px 10px; font-size: 12px; }
+    .pagination { margin-top: 20px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
+    .pagination button { padding: 6px 12px; border: 1px solid #dcdfe6; background-color: #fff; color: #606266; cursor: pointer; border-radius: 4px; }
+    .pagination button:hover:not(:disabled) { border-color: #409eff; color: #409eff; }
+    .pagination button.active { background-color: #409eff; border-color: #409eff; color: #fff; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .tag { display: inline-block; padding: 2px 8px; font-size: 12px; border-radius: 4px; }
+    .tag-success { background-color: #f0f9ff; color: #67c23a; }
+    .tag-danger { background-color: #fef0f0; color: #f56c6c; }
+    .tag-info { background-color: #f4f4f5; color: #909399; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal { background-color: #fff; border-radius: 4px; min-width: 400px; max-width: 90vw; max-height: 90vh; overflow: auto; }
+    .modal-header { padding: 15px 20px; border-bottom: 1px solid #ebeef5; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 18px; font-weight: 600; margin: 0; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #909399; }
+    .modal-close:hover { color: #606266; }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 15px 20px; border-top: 1px solid #ebeef5; display: flex; justify-content: flex-end; gap: 10px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #606266; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #409eff; }
+    .loading { display: flex; justify-content: center; align-items: center; padding: 40px; color: #909399; }
+    .loading::after { content: ''; width: 30px; height: 30px; border: 3px solid #dcdfe6; border-top-color: #409eff; border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .action-buttons { display: flex; gap: 5px; }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1 class="page-title">汽车在库档案管理</h1>
+    <p class="page-subtitle">管理系统车辆档案信息</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span>车辆档案列表</span>
+      <button class="btn btn-primary" onclick="openCarDialog()">+ 新增在库档案</button>
+    </div>
+    <div class="card-body">
+      <div class="search-form">
+        <div class="search-item">
+          <label>车牌号:</label>
+          <input type="text" id="searchPlate" placeholder="请输入车牌号">
+        </div>
+        <div class="search-item">
+          <label>品牌方:</label>
+          <input type="text" id="searchBrand" placeholder="请输入品牌方">
+        </div>
+        <div class="search-actions">
+          <button class="btn btn-primary" onclick="handleSearch()">搜索</button>
+          <button class="btn" onclick="resetSearch()">重置</button>
+        </div>
+      </div>
+
+      <div id="loading" class="loading" style="display: none;">加载中...</div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll"></th>
+              <th>ID</th>
+              <th>车牌号</th>
+              <th>品牌方</th>
+              <th>车型</th>
+              <th>是否年审</th>
+              <th>提车时间</th>
+              <th>是否在用</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="carsTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <div id="carModal" style="display: none;">
+    <div class="modal-overlay" onclick="closeCarModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="modalTitle">新增在库档案</h3>
+          <button class="modal-close" onclick="closeCarModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="carForm">
+            <input type="hidden" id="carId">
+            <div class="form-group">
+              <label>车牌号 <span style="color: #f56c6c">*</span></label>
+              <input type="text" id="plateNumber" placeholder="请输入车牌号" required>
+            </div>
+            <div class="form-group">
+              <label>品牌方 <span style="color: #f56c6c">*</span></label>
+              <input type="text" id="brand" placeholder="请输入品牌方" required>
+            </div>
+            <div class="form-group">
+              <label>车型 <span style="color: #f56c6c">*</span></label>
+              <input type="text" id="vehicleModel" placeholder="请输入车型" required>
+            </div>
+            <div class="form-group">
+              <label>是否年审</label>
+              <select id="annualInspect" style="padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px; width: 100%;">
+                <option value="false">否</option>
+                <option value="true">是</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>提车时间</label>
+              <input type="date" id="pickupTime" style="width: 100%; padding: 8px 12px; border: 1px solid #dcdfe6; border-radius: 4px;">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeCarModal()">取消</button>
+          <button class="btn btn-primary" onclick="saveCar()">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/utils.js"></script>
+  <script>
+    let carsList = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    let total = 0;
+    let isEdit = false;
+
+    async function loadCars() {
+      const loading = document.getElementById('loading');
+      loading.style.display = 'flex';
+
+      const searchPlate = document.getElementById('searchPlate').value;
+      const searchBrand = document.getElementById('searchBrand').value;
+
+      try {
+        const params = { page: currentPage };
+        if (searchPlate) params.plate_number = searchPlate;
+        if (searchBrand) params.brand = searchBrand;
+
+        const url = searchPlate || searchBrand ? '/cars/search' : '/cars/';
+        const response = await http.get(url, params);
+
+        carsList = response.data || [];
+        total = carsList.length;
+        renderTable();
+        renderPagination();
+      } catch (error) {
+        console.error('获取车辆列表失败:', error);
+        showMessage('获取车辆列表失败', 'error');
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function getBrandText(brand) {
+      const brandMap = { volkswagen: '大众', toyota: '丰田', honda: '本田', buick: '别克', bmw: '宝马' };
+      return brandMap[brand] || brand || '-';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('carsTableBody');
+      tbody.innerHTML = '';
+
+      carsList.forEach(car => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="checkbox" data-id="${car.id}"></td>
+          <td>${car.id}</td>
+          <td>${car.plate_number}</td>
+          <td><span class="tag tag-info">${getBrandText(car.brand)}</span></td>
+          <td>${car.vehicle_model || '-'}</td>
+          <td><span class="tag ${car.is_annual_inspected ? 'tag-success' : 'tag-danger'}">${car.is_annual_inspected ? '是' : '否'}</span></td>
+          <td>${car.pickup_time || '-'}</td>
+          <td><span class="tag ${car.is_in_use ? 'tag-success' : 'tag-danger'}">${car.is_in_use ? '在用' : '停用'}</span></td>
+          <td class="action-buttons">
+            <button class="btn btn-small" onclick="editCar(${car.id})">编辑</button>
+            <button class="btn btn-small btn-danger" onclick="deleteCar(${car.id})">删除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(total / pageSize) || 1;
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.textContent = '上一页';
+      prevBtn.disabled = currentPage <= 1;
+      prevBtn.onclick = () => { currentPage--; loadCars(); };
+      pagination.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        if (i === currentPage) btn.classList.add('active');
+        btn.onclick = () => { currentPage = i; loadCars(); };
+        pagination.appendChild(btn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.textContent = '下一页';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.onclick = () => { currentPage++; loadCars(); };
+      pagination.appendChild(nextBtn);
+    }
+
+    function handleSearch() {
+      currentPage = 1;
+      loadCars();
+    }
+
+    function resetSearch() {
+      document.getElementById('searchPlate').value = '';
+      document.getElementById('searchBrand').value = '';
+      currentPage = 1;
+      loadCars();
+    }
+
+    function openCarDialog(car = null) {
+      isEdit = !!car;
+      document.getElementById('modalTitle').textContent = isEdit ? '编辑在库档案' : '新增在库档案';
+      document.getElementById('carForm').reset();
+      document.getElementById('carId').value = '';
+
+      if (car) {
+        document.getElementById('carId').value = car.id;
+        document.getElementById('plateNumber').value = car.plate_number;
+        document.getElementById('brand').value = car.brand;
+        document.getElementById('vehicleModel').value = car.vehicle_model;
+        document.getElementById('annualInspect').value = car.is_annual_inspected ? 'true' : 'false';
+        document.getElementById('pickupTime').value = car.pickup_time ? car.pickup_time.split(' ')[0] : '';
+      }
+
+      document.getElementById('carModal').style.display = 'block';
+    }
+
+    function closeCarModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('carModal').style.display = 'none';
+    }
+
+    async function saveCar() {
+      const plateNumber = document.getElementById('plateNumber').value.trim();
+      const brand = document.getElementById('brand').value.trim();
+      const vehicleModel = document.getElementById('vehicleModel').value.trim();
+      const isAnnualInspect = document.getElementById('annualInspect').value === 'true';
+      const pickupTime = document.getElementById('pickupTime').value;
+      const id = document.getElementById('carId').value;
+
+      if (!plateNumber) {
+        showMessage('请输入车牌号', 'error');
+        return;
+      }
+
+      if (!brand) {
+        showMessage('请输入品牌方', 'error');
+        return;
+      }
+
+      if (!vehicleModel) {
+        showMessage('请输入车型', 'error');
+        return;
+      }
+
+      const formData = {
+        plate_number: plateNumber,
+        brand: brand,
+        vehicle_model: vehicleModel,
+        is_annual_inspected: isAnnualInspect,
+        pickup_time: pickupTime ? pickupTime + ' 00:00:00' : ''
+      };
+
+      try {
+        if (isEdit) {
+          formData.id = id;
+          await http.put(`/cars/${id}`, formData);
+          showMessage('编辑成功', 'success');
+        } else {
+          await http.post('/cars/', formData);
+          showMessage('新增成功', 'success');
+        }
+        closeCarModal();
+        loadCars();
+      } catch (error) {
+        console.error('保存失败:', error);
+        showMessage(error.message || '保存失败', 'error');
+      }
+    }
+
+    function editCar(id) {
+      const car = carsList.find(c => c.id === id);
+      if (car) openCarDialog(car);
+    }
+
+    async function deleteCar(id) {
+      const confirmed = await showConfirm('确定要删除该在库档案吗？', '删除确认');
+      if (!confirmed) return;
+
+      try {
+        await http.delete(`/cars/${id}`);
+        showMessage('删除成功', 'success');
+        loadCars();
+      } catch (error) {
+        console.error('删除失败:', error);
+        showMessage('删除失败', 'error');
+      }
+    }
+
+    document.getElementById('selectAll').addEventListener('change', function() {
+      document.querySelectorAll('#carsTableBody input[type="checkbox"]').forEach(cb => cb.checked = this.checked);
+    });
+
+    loadCars();
+  </script>
+</body>
+</html>

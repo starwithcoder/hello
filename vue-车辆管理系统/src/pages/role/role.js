@@ -17,7 +17,13 @@ export default {
     },
     delete(name) {
         return axios.delete(`/roles/delete?role_name=${name}`)
-    }
+    },
+      getAllP(){
+        return axios.get('/permissions/get')
+    },
+    getOneP(id){
+        return axios.get(`/permissions/${id}`)
+    },
 }
 
 

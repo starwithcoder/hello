@@ -16,7 +16,6 @@
             prefix-icon="User"
           ></el-input>
         </el-form-item>
-      
         <el-form-item label="密码" prop="password">
           <el-input
             v-model="registerForm.password"
@@ -35,6 +34,17 @@
             show-password
           ></el-input>
         </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="registerForm.role" placeholder="请选择角色" style="width: 100%">
+            <el-option
+              v-for="item in roleList"
+              :key="item.id"
+              :label="item.role_name"
+              :value="item.role_name"
+            />
+             </el-select>
+        </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="handleRegister" :loading="loading" block>
             {{ loading ? '注册中...' : '注册' }}
@@ -50,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
@@ -58,11 +68,12 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const registerFormRef = ref()
 const loading = ref(false)
-
+const roleList = ref([])
 const registerForm = reactive({
   username: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  role:''
 })
 
 const registerRules = {
@@ -101,7 +112,7 @@ const handleRegister = async () => {
     const response = await axios.post('/register', {
       username: registerForm.username,
       password: registerForm.password,
-      role: ''
+      role: registerForm.role
     })
     
     // 注册成功处理
@@ -132,6 +143,18 @@ const handleRegister = async () => {
 const goToLogin = () => {
   router.push('/login')
 }
+
+onMounted(async ()=>{
+   try {
+    const response = await axios.get('/roles/get')
+    roleList.value = response.data.data
+  } catch (error) {
+    console.error('获取角色列表失败:', error)
+    ElMessage.error('获取角色列表失败')
+  }
+
+})
+
 </script>
 
 <style scoped>
