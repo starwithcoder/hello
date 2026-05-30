@@ -98,8 +98,6 @@
         width="600px"
          @close="handleClose"
 >
-
-    >
       <el-form :model="recordForm" :rules="recordRules" ref="recordFormRef" label-width="100px">
         <el-form-item label="发生日期" prop="occurrence_date">
           <el-date-picker

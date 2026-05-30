@@ -44,6 +44,7 @@ def login():
     password = data.get('password')
     logger.debug(username)
     # 如果纯在token
+    logger.info(f"这是一个错误{username}")
     print('有token')
     return authenticate_user(username,password)
     #如果不存在

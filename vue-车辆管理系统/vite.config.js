@@ -23,9 +23,10 @@ export default defineConfig({
   ],
   base: './',
  server: {
+    port: 3000,
   proxy: {
     '/api': {
-      target: 'http://192.168.1.2:5000', // 后端地址
+      target: 'http://127.0.0.1:5000', // 后端地址
       changeOrigin: true
     }
   }

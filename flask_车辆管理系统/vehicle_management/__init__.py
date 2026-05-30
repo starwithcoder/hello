@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from flask import send_from_directory
+from pathlib import Path
 
 
-
+dist_dir = Path(__file__).parent.parent / 'dist'
 
 # 创建数据库实例
 db = SQLAlchemy()
@@ -18,20 +20,33 @@ migrate = Migrate()
 load_dotenv()
 
 
+
 def create_app(config_name='default'):
     # 创建Flask应用实例
-    app = Flask(__name__)
+
+    app = Flask(__name__, static_folder=dist_dir, static_url_path='')
     # 加载flask-restx
 
     # 加载配置
     app.config.from_object(config[config_name])
+
     @app.route('/')
-    def index():
-        return jsonify({
-            'message': '欢迎访问车辆管理系统 API',
-            'version': '1.0',
-            'status': 'running'
-        })
+    def serve_index():
+        return send_from_directory(app.static_folder, 'index.html')
+
+    @app.route('/<path:path>')
+    def serve_static(path):
+        if path.startswith('api/'):
+            return jsonify({'error': 'API endpoint not found'}), 404
+        return send_from_directory(app.static_folder, path)
+
+    # @app.route('/')
+    # def index():
+    #     return jsonify({
+    #         'message': '欢迎访问车辆管理系统 API',
+    #         'version': '1.0',
+    #         'status': 'running'
+    #     })
     # CORS(
     #     app,
     #     resources={r"/api/*": {"origins": ["http://localhost:5173", "http://192.168.1.2:5000"]}},  # 仅 /api/* 路径 + 仅允许 Vue 源

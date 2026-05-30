@@ -71,7 +71,8 @@ router.beforeEach((to, from, next) => {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
     if (!isLoggedIn) {
       // 未登录，重定向到登录页面
-      next('/login')
+        //next()
+        next('/login')
     } else {
       // 已登录，继续访问
       next()
